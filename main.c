@@ -3,10 +3,10 @@
 #include "uart.h"
 #include "gps.h"
 
-int32_t lat = 1;
-int32_t lon = 2;
-int16_t alt = 3;
-uint8_t fix = 4;
+int32_t lat = 0;
+int32_t lon = 0;
+int16_t alt = 0;
+uint8_t fix = 0;
 
 void print_hex(uint8_t * inchar, uint8_t num_len)
 {
@@ -59,8 +59,6 @@ int main(void)
 		_delay_ms(5000);
 		gps_disable();
   	gps_read(&lat, &lon, &alt, &fix);
-		lat = 1;
-		uart_tx_byte('>');
 		print_hex((uint8_t *)&lat, 4);
 		uart_tx_byte(',');
 		print_hex((uint8_t *)&lon, 4);

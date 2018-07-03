@@ -17,10 +17,12 @@ volatile uint8_t ck_string = 0;
 volatile uint8_t ck_i = 0;
 
 /* variables gained from GPS reciever and visible to other programs*/
-volatile int32_t gps_latit = 4;
-volatile int32_t gps_longi = 3;
-volatile int16_t gps_alt = 2;
-volatile uint8_t gps_fix = 1;
+volatile int32_t gps_latit = 0;
+volatile int32_t gps_longi = 0;
+volatile int32_t gps_latit_b = 0;
+volatile int32_t gps_longi_b = 0;
+volatile int16_t gps_alt = 0;
+volatile uint8_t gps_fix = 0;
 volatile uint8_t gps_en = 1;
 volatile uint8_t gps_heart = 0;
 
@@ -103,10 +105,6 @@ ISR(USART_RX_vect)
       comma = 0;
       gpgga = 0;
       ck_string = 0;
-      //gps_latit = 0;
-      //gps_longi = 0;
-      //gps_alt = 0;
-      //gps_fix = 0;
       return;
     }
 
@@ -182,10 +180,6 @@ ISR(USART_RX_vect)
           gps_buf[3] == 'G' &&
           gps_buf[4] == 'A') {
 					gpgga = 1;
-      		gps_latit = 0;
-      		gps_longi = 0;
-      		gps_alt = 0;
-      		gps_fix = 0;
 					return;
 				}
 
@@ -228,14 +222,14 @@ ISR(USART_RX_vect)
           deg =  atol(degrees);
           min =  atol(minutes);
           dmin = atol(dminutes);
-          gps_latit = (deg<<17) +  (((min*ones) + ((((uint64_t)dmin)*onet*ones)>>32))>>15);
+          gps_latit_b = (deg<<17) +  (((min*ones) + ((((uint64_t)dmin)*onet*ones)>>32))>>15);
           
         } else if (comma == 4) {
 
           /* N or S */
           /* if south bit mask negative on latitude */
 					if(gps_buf[0] == 'S') {
-						gps_latit = -gps_latit;
+						gps_latit_b = -gps_latit_b;
 					}
 
         } else if (comma == 5) {
@@ -271,18 +265,27 @@ ISR(USART_RX_vect)
           deg =  atol(degrees);
           min =  atol(minutes);
           dmin = atol(dminutes);
-          gps_longi = (deg<<17) +  (((min*ones) + ((((uint64_t)dmin)*onet*ones)>>32))>>15);
+          gps_longi_b = (deg<<17) +  (((min*ones) + ((((uint64_t)dmin)*onet*ones)>>32))>>15);
 
         } else if (comma == 6) {
 
           /* E or W */
           if(gps_buf[0] == 'W') {
-						gps_longi = -gps_longi;
+						gps_longi_b = -gps_longi_b;
 					}
         } else if (comma == 7) {
          
           /* Fix Quality */
           gps_fix = gps_buf[0]-48;
+
+					/* if theres a fix, copy lat/lon, otherwise keep lat/lon of last fix */
+					if (gps_fix != 0) {
+						gps_latit = 0;
+						gps_longi = 0;
+						gps_alt = 0;
+						gps_latit = gps_latit_b;
+						gps_longi = gps_longi_b;
+					}
 
 				//} else if (comma == 8) {
 
@@ -302,7 +305,7 @@ ISR(USART_RX_vect)
           /* scale to 16bits */
           /* 0 - 131072m in 2m increments */
           int32_t alt32 = atol(altitude);
-          gps_alt = alt32/2;
+          if (gps_fix != 0) gps_alt = alt32/2;
         }
       }
       gps_buf_i = 0;
