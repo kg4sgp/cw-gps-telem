@@ -11,4 +11,4 @@ When the microcontroller wants to send a telemetry message it:
 
 The function to copy the variables over is "gps_read". It takes the addresses of the variables to write to, which it should do. Its not doing that though. I get >00000001,00000000,0000,00 written over uart.
 
-Any suggestions?
+Problem was setting gps_latit and other variables at RXing $ (the start of a NEMA packet) instead of on confirmation of a GPGGA packet

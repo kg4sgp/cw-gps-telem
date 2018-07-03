@@ -103,10 +103,10 @@ ISR(USART_RX_vect)
       comma = 0;
       gpgga = 0;
       ck_string = 0;
-      gps_latit = 0;
-      gps_longi = 0;
-      gps_alt = 0;
-      gps_fix = 0;
+      //gps_latit = 0;
+      //gps_longi = 0;
+      //gps_alt = 0;
+      //gps_fix = 0;
       return;
     }
 
@@ -182,6 +182,10 @@ ISR(USART_RX_vect)
           gps_buf[3] == 'G' &&
           gps_buf[4] == 'A') {
 					gpgga = 1;
+      		gps_latit = 0;
+      		gps_longi = 0;
+      		gps_alt = 0;
+      		gps_fix = 0;
 					return;
 				}
 
